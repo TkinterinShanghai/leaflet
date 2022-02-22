@@ -8,20 +8,28 @@ function HomePage({ ipInfo }: { ipInfo: apiResponseType }) {
   return (
     <div style={{ height: "100vh", display: "flex" }}>
       <div style={{ margin: "auto", width: "50%" }}>
-        <h2 style={{margin: "auto", width: "fit-content", marginBottom: "10px"}}>Momentaner Standort ist {ipInfo.city}</h2>
+        <h2 style={{ margin: "auto", width: "fit-content", marginBottom: "10px" }}>
+          Momentaner Standort ist {ipInfo.city}
+        </h2>
         <Map center={[ipInfo.latitude, ipInfo.longitude]} />
       </div>
     </div>
   );
 }
 
-const getLocation = async () => {
-  let response = await fetch(`https://api.freegeoip.app/json/?apikey=${process.env.API_KEY}`);
+const getLocation = async (ip: string) => {
+  let response = await fetch(
+    `https://api.freegeoip.app/json/${ip}?apikey=${process.env.API_KEY}`
+  );
   return (await response.json()) as apiResponseType;
 };
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const ipInfo = await getLocation();
+  let ip =
+    process.env.NODE_ENV === "production"
+      ? (context.req.headers["x-real-ip"] as string) || context.req.socket.remoteAddress
+      : "";
+  const ipInfo = await getLocation(ip!);
   return {
     props: { ipInfo },
   };
